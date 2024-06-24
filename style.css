@@ -1,0 +1,51 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+#container {
+    width: 100vw;
+    height: 90vh;
+}
+
+#controls {
+    width: 100vw;
+    height: 10vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #333;
+    color: white;
+}
+
+#timeline {
+    width: 70%;
+    margin-right: 10px;
+}
+
+#playPause {
+    padding: 5px 10px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+}
+
+#playPause:focus {
+    outline: none;
+}
+
+#speedControl {
+    padding: 5px 10px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    margin-left: 10px;
+    background-color: #555;
+    color: white;
+}
