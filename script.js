@@ -28,17 +28,6 @@ scene.add(directionalLight);
 const ambientLight = new THREE.AmbientLight(0xffffff, 1); // Weiter erhöhte Intensität
 scene.add(ambientLight);
 
-// Load HDRI Environment
-const rgbeLoader = new THREE.RGBELoader();
-rgbeLoader.setPath('path/to/your/hdri/');  // Pfad zur HDRI-Datei
-rgbeLoader.load('your_hdri_file.hdr', function (texture) {
-    const envMap = pmremGenerator.fromEquirectangular(texture).texture;
-    scene.environment = envMap;
-    scene.background = envMap;
-    texture.dispose();
-    pmremGenerator.dispose();
-});
-
 // Animation-Mixer
 let mixer, action, duration, gltf;
 
@@ -177,7 +166,11 @@ document.getElementById('speedControl').addEventListener('change', function (e) 
 // Funktion für AR-Modus
 function startAR() {
     if (navigator.xr) {
-        navigator.xr.requestSession('immersive-ar').then(onSessionStarted);
+        navigator.xr.requestSession('immersive-ar', {
+            requiredFeatures: ['hit-test'],
+            optionalFeatures: ['dom-overlay'],
+            domOverlay: { root: document.body }
+        }).then(onSessionStarted);
     } else {
         alert('WebXR is not supported on this browser/device');
     }
@@ -187,11 +180,32 @@ function onSessionStarted(session) {
     session.addEventListener('end', onSessionEnded);
     renderer.xr.enabled = true;
     renderer.xr.setSession(session);
-    animate();
+    renderer.setAnimationLoop(animateAR);
 }
 
 function onSessionEnded() {
     renderer.xr.enabled = false;
+    renderer.setAnimationLoop(animate);
+}
+
+function animateAR(timestamp, frame) {
+    const session = renderer.xr.getSession();
+    if (session) {
+        const referenceSpace = renderer.xr.getReferenceSpace();
+        const pose = frame.getViewerPose(referenceSpace);
+
+        if (pose) {
+            // Update scene for AR
+            const view = pose.views[0];
+            const viewport = session.renderState.baseLayer.getViewport(view);
+            renderer.setSize(viewport.width, viewport.height);
+            camera.matrix.fromArray(view.transform.matrix);
+            camera.projectionMatrix.fromArray(view.projectionMatrix);
+            camera.updateMatrixWorld(true);
+
+            renderer.render(scene, camera);
+        }
+    }
 }
 
 // Ensure the AR scene is initially hidden
