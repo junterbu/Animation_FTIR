@@ -49,3 +49,34 @@ body {
     background-color: #555;
     color: white;
 }
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    #controls {
+        flex-direction: column;
+        height: auto;
+    }
+
+    #timeline {
+        width: 90%;
+        margin: 10px 0;
+    }
+
+    #playPause, #speedControl, #arButton {
+        margin: 5px 0;
+    }
+}
+
+/* Ensure buttons are visible on all devices */
+#arButton {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+#arButton:focus {
+    outline: none;
+}
