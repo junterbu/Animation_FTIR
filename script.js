@@ -28,6 +28,17 @@ scene.add(directionalLight);
 const ambientLight = new THREE.AmbientLight(0xffffff, 1); // Weiter erhöhte Intensität
 scene.add(ambientLight);
 
+// Load HDRI Environment
+const rgbeLoader = new THREE.RGBELoader();
+rgbeLoader.setPath('path/to/your/hdri/');  // Pfad zur HDRI-Datei
+rgbeLoader.load('your_hdri_file.hdr', function (texture) {
+    const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+    scene.environment = envMap;
+    scene.background = envMap;
+    texture.dispose();
+    pmremGenerator.dispose();
+});
+
 // Animation-Mixer
 let mixer, action, duration, gltf;
 
@@ -82,46 +93,46 @@ let playbackSpeed = 1.0;
 
 // Animationsfunktion
 function animate() {
-    renderer.setAnimationLoop(() => {
-        const delta = clock.getDelta() * playbackSpeed;
+    requestAnimationFrame(animate);
 
-        // Wenn ein Mixer vorhanden ist, Animationen aktualisieren
-        if (mixer && isPlaying) {
-            mixer.update(delta);
-            currentTime = mixer.time % duration;
+    const delta = clock.getDelta() * playbackSpeed;
 
-            // Zeitleiste aktualisieren
-            document.getElementById('timeline').value = currentTime * 100;
+    // Wenn ein Mixer vorhanden ist, Animationen aktualisieren
+    if (mixer && isPlaying) {
+        mixer.update(delta);
+        currentTime = mixer.time % duration;
 
-            // Calculate current frame (assuming 1000 frames in total duration)
-            const totalFrames = 1000;
-            const currentFrame = (currentTime / duration) * totalFrames;
+        // Zeitleiste aktualisieren
+        document.getElementById('timeline').value = currentTime * 100;
 
-            // Update shader material alpha value based on frame
-            gltf.scene.traverse((object) => {
-                if (object.isMesh && object.userData.pbrMaterial) {
-                    const pbrMaterial = object.userData.pbrMaterial;
+        // Calculate current frame (assuming 1000 frames in total duration)
+        const totalFrames = 1000;
+        const currentFrame = (currentTime / duration) * totalFrames;
 
-                    if (currentFrame < 60) {
-                        pbrMaterial.opacity = 1.0;
-                    } else if (currentFrame >= 60 && currentFrame <= 80) {
-                        const alphaValue = 1.0 - (0.5 * ((currentFrame - 60) / 20));
-                        pbrMaterial.opacity = alphaValue;
-                    } else {
-                        pbrMaterial.opacity = 0.5;
-                    }
+        // Update shader material alpha value based on frame
+        gltf.scene.traverse((object) => {
+            if (object.isMesh && object.userData.pbrMaterial) {
+                const pbrMaterial = object.userData.pbrMaterial;
+
+                if (currentFrame < 60) {
+                    pbrMaterial.opacity = 1.0;
+                } else if (currentFrame >= 60 && currentFrame <= 80) {
+                    const alphaValue = 1.0 - (0.5 * ((currentFrame - 60) / 20));
+                    pbrMaterial.opacity = alphaValue;
+                } else {
+                    pbrMaterial.opacity = 0.5;
                 }
-            });
-        }
+            }
+        });
+    }
 
-        controls.update();  // OrbitControls aktualisieren
-        renderer.render(scene, camera);
+    controls.update();  // OrbitControls aktualisieren
+    renderer.render(scene, camera);
 
-        // Überprüfen, ob die Animation wieder bei null startet
-        if (currentTime >= duration - delta) {
-            document.getElementById('timeline').value = 0;
-        }
-    });
+    // Überprüfen, ob die Animation wieder bei null startet
+    if (currentTime >= duration - delta) {
+        document.getElementById('timeline').value = 0;
+    }
 }
 
 // Fenstergrößenänderung behandeln
@@ -162,51 +173,3 @@ document.getElementById('playPause').addEventListener('click', function () {
 document.getElementById('speedControl').addEventListener('change', function (e) {
     playbackSpeed = parseFloat(e.target.value);
 });
-
-// Funktion für AR-Modus
-function startAR() {
-    if (navigator.xr) {
-        navigator.xr.requestSession('immersive-ar', {
-            requiredFeatures: ['hit-test'],
-            optionalFeatures: ['dom-overlay'],
-            domOverlay: { root: document.body }
-        }).then(onSessionStarted);
-    } else {
-        alert('WebXR is not supported on this browser/device');
-    }
-}
-
-function onSessionStarted(session) {
-    session.addEventListener('end', onSessionEnded);
-    renderer.xr.enabled = true;
-    renderer.xr.setSession(session);
-    renderer.setAnimationLoop(animateAR);
-}
-
-function onSessionEnded() {
-    renderer.xr.enabled = false;
-    renderer.setAnimationLoop(animate);
-}
-
-function animateAR(timestamp, frame) {
-    const session = renderer.xr.getSession();
-    if (session) {
-        const referenceSpace = renderer.xr.getReferenceSpace();
-        const pose = frame.getViewerPose(referenceSpace);
-
-        if (pose) {
-            // Update scene for AR
-            const view = pose.views[0];
-            const viewport = session.renderState.baseLayer.getViewport(view);
-            renderer.setSize(viewport.width, viewport.height);
-            camera.matrix.fromArray(view.transform.matrix);
-            camera.projectionMatrix.fromArray(view.projectionMatrix);
-            camera.updateMatrixWorld(true);
-
-            renderer.render(scene, camera);
-        }
-    }
-}
-
-// Ensure the AR scene is initially hidden
-document.querySelector('a-scene').style.display = 'none';
