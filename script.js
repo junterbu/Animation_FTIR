@@ -91,51 +91,67 @@ let isPlaying = true;
 let currentTime = 0;
 let playbackSpeed = 1.0;
 
-// Animationsfunktion
-function animate() {
-    requestAnimationFrame(animate);
+// Create AR button and add event listener
+const arButton = document.getElementById('arButton');
+arButton.addEventListener('click', activateAR);
 
-    const delta = clock.getDelta() * playbackSpeed;
-
-    // Wenn ein Mixer vorhanden ist, Animationen aktualisieren
-    if (mixer && isPlaying) {
-        mixer.update(delta);
-        currentTime = mixer.time % duration;
-
-        // Zeitleiste aktualisieren
-        document.getElementById('timeline').value = currentTime * 100;
-
-        // Calculate current frame (assuming 1000 frames in total duration)
-        const totalFrames = 1000;
-        const currentFrame = (currentTime / duration) * totalFrames;
-
-        // Update shader material alpha value based on frame
-        gltf.scene.traverse((object) => {
-            if (object.isMesh && object.userData.pbrMaterial) {
-                const pbrMaterial = object.userData.pbrMaterial;
-
-                if (currentFrame < 60) {
-                    pbrMaterial.opacity = 1.0;
-                } else if (currentFrame >= 60 && currentFrame <= 80) {
-                    const alphaValue = 1.0 - (0.5 * ((currentFrame - 60) / 20));
-                    pbrMaterial.opacity = alphaValue;
-                } else {
-                    pbrMaterial.opacity = 0.5;
-                }
-            }
-        });
-    }
-
-    controls.update();  // OrbitControls aktualisieren
-    renderer.render(scene, camera);
-
-    // Überprüfen, ob die Animation wieder bei null startet
-    if (currentTime >= duration - delta) {
-        document.getElementById('timeline').value = 0;
+function activateAR() {
+    if (navigator.xr) {
+        navigator.xr.requestSession('immersive-ar').then(onSessionStarted);
+    } else {
+        alert("WebXR is not supported on this browser/device");
     }
 }
 
-// Fenstergrößenänderung behandeln
+function onSessionStarted(session) {
+    session.addEventListener('end', onSessionEnded);
+    renderer.xr.enabled = true;
+    renderer.xr.setSession(session);
+    animate();
+}
+
+function onSessionEnded() {
+    renderer.xr.enabled = false;
+}
+// Existing animate function...
+function animate() {
+    renderer.setAnimationLoop(() => {
+        // If using WebXR session
+        if (renderer.xr.isPresenting) {
+            renderer.render(scene, camera);
+        } else {
+            // Normal rendering
+            const delta = clock.getDelta() * playbackSpeed;
+            if (mixer && isPlaying) {
+                mixer.update(delta);
+                currentTime = mixer.time % duration;
+                document.getElementById('timeline').value = currentTime * 100;
+                const totalFrames = 1000;
+                const currentFrame = (currentTime / duration) * totalFrames;
+                gltf.scene.traverse((object) => {
+                    if (object.isMesh && object.userData.pbrMaterial) {
+                        const pbrMaterial = object.userData.pbrMaterial;
+                        if (currentFrame < 60) {
+                            pbrMaterial.opacity = 1.0;
+                        } else if (currentFrame >= 60 && currentFrame <= 80) {
+                            const alphaValue = 1.0 - (0.5 * ((currentFrame - 60) / 20));
+                            pbrMaterial.opacity = alphaValue;
+                        } else {
+                            pbrMaterial.opacity = 0.5;
+                        }
+                    }
+                });
+            }
+            controls.update();
+            renderer.render(scene, camera);
+            if (currentTime >= duration - delta) {
+                document.getElementById('timeline').value = 0;
+            }
+        }
+    });
+}
+
+// Window resize handler...
 window.addEventListener('resize', function () {
     const width = window.innerWidth;
     const height = window.innerHeight;
@@ -144,7 +160,7 @@ window.addEventListener('resize', function () {
     camera.updateProjectionMatrix();
 });
 
-// Zeitleistensteuerung
+// Timeline control...
 document.getElementById('timeline').addEventListener('input', function (e) {
     const value = e.target.value / 100;
     mixer.setTime(value);
@@ -154,13 +170,13 @@ document.getElementById('timeline').addEventListener('input', function (e) {
     }
 });
 
-// Play/Pause-Steuerung
+// Play/Pause control...
 document.getElementById('playPause').addEventListener('click', function () {
     isPlaying = !isPlaying;
     if (isPlaying) {
         action.paused = false;
         clock.start();
-        clock.elapsedTime = currentTime; // Synchronisieren Sie die Zeit des Mixers mit der Uhr
+        clock.elapsedTime = currentTime;
         this.innerHTML = '<i class="fas fa-pause"></i>';
     } else {
         action.paused = true;
@@ -169,7 +185,7 @@ document.getElementById('playPause').addEventListener('click', function () {
     }
 });
 
-// Geschwindigkeitssteuerung
+// Speed control...
 document.getElementById('speedControl').addEventListener('change', function (e) {
     playbackSpeed = parseFloat(e.target.value);
 });
