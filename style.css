@@ -1,16 +1,20 @@
+/* Ensure the controls are always visible */
 body {
     margin: 0;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    height: 100vh;
 }
 
 #container {
+    flex: 1;
     width: 100vw;
-    height: 90vh;
 }
 
 #controls {
+    position: fixed;
+    bottom: 0;
     width: 100vw;
     height: 10vh;
     display: flex;
@@ -18,10 +22,11 @@ body {
     justify-content: center;
     background-color: #333;
     color: white;
+    z-index: 1000;
 }
 
 #timeline {
-    width: 70%;
+    width: 60%;
     margin-right: 10px;
 }
 
@@ -50,6 +55,20 @@ body {
     color: white;
 }
 
+#arButton {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+#arButton:focus {
+    outline: none;
+}
+
 /* Responsive Styles */
 @media (max-width: 768px) {
     #controls {
@@ -65,18 +84,4 @@ body {
     #playPause, #speedControl, #arButton {
         margin: 5px 0;
     }
-}
-
-/* Ensure buttons are visible on all devices */
-#arButton {
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-    margin-left: 10px;
-}
-#arButton:focus {
-    outline: none;
 }
