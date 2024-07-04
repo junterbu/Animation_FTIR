@@ -41,6 +41,7 @@ rgbeLoader.load('your_hdri_file.hdr', function (texture) {
 
 // Animation-Mixer
 let mixer, action, duration, gltf;
+let isAnimationLoaded = false;
 
 // GLB Loader
 const loader = new THREE.GLTFLoader();
@@ -48,11 +49,10 @@ loader.load('assets/FTIR_v3.glb', function (loadedGltf) {
     gltf = loadedGltf;
     scene.add(gltf.scene);
 
-    // Animationen laden und abspielen
+    // Animationen laden, aber nicht abspielen
     mixer = new THREE.AnimationMixer(gltf.scene);
     action = mixer.clipAction(gltf.animations[0]);
-    action.play();
-
+    
     duration = action.getClip().duration;
     document.getElementById('timeline').max = duration * 100;
 
@@ -76,7 +76,7 @@ loader.load('assets/FTIR_v3.glb', function (loadedGltf) {
         }
     });
 
-    animate();
+    isAnimationLoaded = true;
 }, undefined, function (error) {
     console.error(error);
 });
@@ -87,9 +87,19 @@ controls.update();
 
 // Uhr für Animationen
 const clock = new THREE.Clock();
-let isPlaying = true;
+let isPlaying = false;
 let currentTime = 0;
 let playbackSpeed = 1.0;
+const audio = document.getElementById('narration');
+
+// Debugging: Audio laden und abspielen
+audio.addEventListener('canplaythrough', () => {
+    console.log('Audio can play through');
+}, false);
+
+audio.addEventListener('error', (e) => {
+    console.error('Audio error', e);
+}, false);
 
 // Animationsfunktion
 function animate() {
@@ -156,16 +166,26 @@ document.getElementById('timeline').addEventListener('input', function (e) {
 
 // Play/Pause-Steuerung
 document.getElementById('playPause').addEventListener('click', function () {
-    isPlaying = !isPlaying;
-    if (isPlaying) {
-        action.paused = false;
-        clock.start();
-        clock.elapsedTime = currentTime; // Synchronisieren Sie die Zeit des Mixers mit der Uhr
-        this.innerHTML = '<i class="fas fa-pause"></i>';
+    if (isAnimationLoaded) {
+        isPlaying = !isPlaying;
+        if (isPlaying) {
+            action.play(); // Starten der Animation
+            audio.play().then(() => {
+                console.log('Audio playing');
+            }).catch((error) => {
+                console.error('Audio play error', error);
+            });
+            clock.start();
+            clock.elapsedTime = currentTime; // Synchronisieren Sie die Zeit des Mixers mit der Uhr
+            this.innerHTML = '<i class="fas fa-pause"></i>';
+        } else {
+            action.paused = true;
+            audio.pause();
+            clock.stop();
+            this.innerHTML = '<i class="fas fa-play"></i>';
+        }
     } else {
-        action.paused = true;
-        clock.stop();
-        this.innerHTML = '<i class="fas fa-play"></i>';
+        console.error('Animation not loaded yet');
     }
 });
 
@@ -173,3 +193,6 @@ document.getElementById('playPause').addEventListener('click', function () {
 document.getElementById('speedControl').addEventListener('change', function (e) {
     playbackSpeed = parseFloat(e.target.value);
 });
+
+// Start der Animationsfunktion
+animate();
