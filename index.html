@@ -11,15 +11,16 @@
     <div id="container"></div>
     <div id="controls">
         <input type="range" id="timeline" min="0" max="100" value="0">
-        <button id="playPause"><i class="fas fa-pause"></i></button>
+        <button id="playPause"><i class="fas fa-play"></i></button>
         <select id="speedControl">
             <option value="0.25">x0.25</option>
             <option value="0.5">x0.5</option>
             <option value="1.0" selected>x1.0</option>
             <option value="1.5">x1.5</option>
         </select>
+        <button id="muteButton"><i class="fas fa-volume-up"></i></button>
     </div>
-    <audio id="narration" src="/assets/speech.mp3"></audio>
+    <audio id="backgroundAudio" src="/assets/speech.mp3"></audio>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>

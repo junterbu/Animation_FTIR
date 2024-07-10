@@ -49,3 +49,18 @@ body {
     background-color: #555;
     color: white;
 }
+
+#muteButton {
+    padding: 5px 10px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    margin-left: 10px;
+    background-color: #555;
+}
+
+#muteButton:focus {
+    outline: none;
+}
