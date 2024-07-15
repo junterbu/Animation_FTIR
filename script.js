@@ -17,15 +17,15 @@ const pmremGenerator = new THREE.PMREMGenerator(renderer);
 pmremGenerator.compileEquirectangularShader();
 
 // Licht hinzufügen
-const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 2); // Weiter erhöhte Intensität
+const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1); // Weiter erhöhte Intensität
 hemisphereLight.position.set(0, 20, 0);
 scene.add(hemisphereLight);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 2); // Weiter erhöhte Intensität
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1); // Weiter erhöhte Intensität
 directionalLight.position.set(0, 20, 10);
 scene.add(directionalLight);
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 1); // Weiter erhöhte Intensität
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // Weiter erhöhte Intensität
 scene.add(ambientLight);
 
 // Load HDRI Environment
