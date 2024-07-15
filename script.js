@@ -30,7 +30,7 @@ scene.add(ambientLight);
 
 // Load HDRI Environment
 const rgbeLoader = new THREE.RGBELoader();
-rgbeLoader.setPath('assets/kloofendal_misty_morning_puresky_8k.hdr');  // Pfad zur HDRI-Datei
+rgbeLoader.setPath('assets/');  // Pfad zur HDRI-Datei
 rgbeLoader.load('kloofendal_misty_morning_puresky_8k.hdr', function (texture) {
     const envMap = pmremGenerator.fromEquirectangular(texture).texture;
     scene.environment = envMap;
